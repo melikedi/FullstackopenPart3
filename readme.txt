@@ -1,4 +1,7 @@
-Forntend
+https://phonebooktr.fly.dev/
+
+
+Frontend
 npm create vite@latest part1 --template react
 npm install
 npm run dev
@@ -7,6 +10,27 @@ Backend
 npm init
 npm install express
 npm install nodemon
+
+
+A production build for applications created with Vite can be created with the command npm run build.
+>npm run build
+--------------------------------
+Proxy:
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    }
+  },
+})
 -----------------------------------------
 {
   "name": "phonebookbackend",
@@ -60,4 +84,7 @@ fly launch
 ---------------------------
 fly deploy
 fly apps open
+the state of the data in your app will be inconsistent between requests, with two machine
+$ fly scale show
+$ fly scale count 1
 
