@@ -1,14 +1,36 @@
-DELETE http://localhost:3001/api/persons/4251
+DELETE http://localhost:3001/api/persons/65eed5a42c97490b9b9ad86f
+
+###
+PUT   http://localhost:3001/api/persons/65eed72a247e6e316bb09b59
+content-type: application/json
+
+{
+    "name": "Melike Funda Müftüoğlu",
+    "number": "5375452087"
+}
 
 ###
 GET   http://localhost:3001/api/persons
 
+###
+GET   http://localhost:3001/info
+
+###
+GET   http://localhost:3001/api/persons/65eecf98b70a71eec018c253
+###
+POST   http://localhost:3001/api/persons
+content-type: application/json
+
+{
+    "name": "Me",
+    "number": "+905375452087"
+}
 
 ###
 POST   http://localhost:3001/api/persons
 content-type: application/json
 
 {
-    "name": "Melike Funda Müftüoğlu",
     "number": "+905375452087"
 }
+

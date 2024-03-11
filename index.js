@@ -1,30 +1,32 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 
+const Person = require('./models/person')
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
+// let persons = [
+//     { 
+//       "id": 1,
+//       "name": "Arto Hellas", 
+//       "number": "040-123456"
+//     },
+//     { 
+//       "id": 2,
+//       "name": "Ada Lovelace", 
+//       "number": "39-44-5323523"
+//     },
+//     { 
+//       "id": 3,
+//       "name": "Dan Abramov", 
+//       "number": "12-43-234345"
+//     },
+//     { 
+//       "id": 4,
+//       "name": "Mary Poppendieck", 
+//       "number": "39-23-6423122"
+//     }
+// ]
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
@@ -53,55 +55,92 @@ const generateId = () => {
 }
 
 app.get('/api/persons',(request,response) => {
-  response.contentType('application/json').json(persons)
-})
-app.get('/api/persons/:id', (request,response) => {
-  const id = Number(request.params.id)
-  const note = persons.find(person=> person.id===id)
-  if (note) {
-      response.json(note)
-  } else {
-      
-      response.statusMessage=`Note with id ${id} not found`
-      response.status(404).end()
-      console.log(response)
-  }
+  Person.find({}).then(p => {
+    response.json(p)
+  })
+  // response.contentType('application/json').json(persons)
 })
 
-app.post('/api/persons', (request,response) => {
-  const body = request.body
-  if(!body.name){
-      return response.status(400).json({error:'name missing'})
-  } else {
-    if (persons.filter(p=>p.name == body.name).length>0) {
-      return response.status(400).json({error:'name already exists in the phonebook'})
+app.get('/api/persons/:id', (request,response,next) => {
+  const id = request.params.id
+  Person.findById(id)
+  .then(p=> {
+    if (p) {
+      response.json(p)
+    } else {
+      response.statusMessage=`Person with id ${id} not found`
+      response.status(404).end()
     }
-  }
-  if(!body.number){
-    return response.status(400).json({error:'number missing'})
-  }
-  const person = {
-      name: body.name,
-      number: body.number,
-      id:generateId()
-  }
-  persons = persons.concat(person)
-  response.json(person)
+  })
+  .catch(e=>{
+    next(e)
+  })
 })
-app.delete('/api/persons/:id', (request,response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(n=>n.id !== id)
-  response.status(204).end()
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
+  .then(updatedNote => {
+    response.json(updatedNote)
+  })
+  .catch(error => next(error))
+})
+
+app.post('/api/persons', (request,response,next) => {
+  const body = request.body
+  const person = new Person({
+    name: body.name,
+    number: body.number
+  })   
+  person.save().then(result => {
+    console.log('person saved!')
+    response.json(result)
+  }).catch(e=>next(e))
+})
+app.delete('/api/persons/:id', (request,response,next) => {
+  const id = request.params.id
+  Person.findByIdAndDelete(id)
+    .then(result=>{
+      console.log(result)
+      response.status(204).end()
+    })
+    .catch(e=>next(e))
 })
 
 app.get('/info',(request,response) => {
-  console.log(persons)
-  let personCount = persons.length 
-  let info = `<p>Phonebook has info for ${personCount} people` + '<br/>' + new Date() + '</p>' 
-  response.send(info)
+  Person.countDocuments({})
+    .then(result=>{
+      let info = `<p>Phonebook has info for ${result} people` + '<br/>' + new Date() + '</p>'
+      response.send(info) 
+    })
+  
+ 
+  // console.log(persons)
+  // let personCount = persons.length 
+  // let info = `<p>Phonebook has info for ${personCount} people` + '<br/>' + new Date() + '</p>' 
+  // response.send(info)
 })
 
 app.use(unknownEndpoint)
-const PORT = process.env.PORT || 3001
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.name)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).send({ error: error.message })
+  }
+
+  next(error)
+}
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 app.listen(PORT)
 console.log(`Server running on port ${PORT}`)

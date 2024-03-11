@@ -14,6 +14,8 @@ npm install nodemon
 
 A production build for applications created with Vite can be created with the command npm run build.
 >npm run build
+Copy dist file to backend.
+
 --------------------------------
 Proxy:
 import { defineConfig } from 'vite'
@@ -88,3 +90,12 @@ the state of the data in your app will be inconsistent between requests, with tw
 $ fly scale show
 $ fly scale count 1
 
+--------
+Mango DB
+MONGODB_URI=address_here npm run dev
+or
+npm install dotenv
+	.env file at the root of the project
+	require('dotenv').config()
+
+fly secrets set MONGODB_URI="mongodb+srv://fullstack:thepasswordishere@cluster0.o1opl.mongodb.net/noteApp?retryWrites=true&w=majority"
