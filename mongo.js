@@ -18,11 +18,11 @@ const personSchema = new mongoose.Schema({
   id: Number,
   name: String,
   number: String
-},{ collection: 'persons'})
+},{ collection: 'persons' })
 
 const Person = mongoose.model('Person', personSchema)
 
-if (process.argv.length == 3 ) {
+if (process.argv.length === 3 ) {
   Person.find({}).then(result => {
     let phonebook = 'phonebook:'
     result.forEach(p => {
@@ -41,11 +41,11 @@ else {
       number: personNumber
     })
     person.save().then(result => {
-      console.log('person saved!')
+      console.log('person saved!', result)
       mongoose.connection.close()
     })
   } else {
-    console.log("Name or Number missing")
+    console.log('Name or Number missing')
     process.exit(1)
   }
 }
